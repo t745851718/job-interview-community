@@ -1,0 +1,153 @@
+/* Light glass surfaces; the community keeps its white, neutral visual identity. */
+:root {
+  --glass: rgba(255, 255, 255, .7);
+  --glass-edge: rgba(255, 255, 255, .88);
+  --glass-shadow: 0 12px 40px rgba(53, 65, 96, .055), inset 0 1px 0 rgba(255, 255, 255, .95);
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 7% 5%, rgba(216, 226, 254, .42), transparent 45%),
+    radial-gradient(ellipse at 92% 25%, rgba(233, 224, 249, .33), transparent 42%),
+    radial-gradient(ellipse at 45% 100%, rgba(227, 237, 248, .24), transparent 48%),
+    #fafbfe;
+  background-attachment: fixed;
+}
+
+.header {
+  width: calc(100% - 64px);
+  max-width: 1220px;
+  margin: 16px auto 0;
+  top: 16px;
+  background: rgba(255, 255, 255, .65);
+  border: 1px solid var(--glass-edge);
+  border-radius: 20px;
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+  backdrop-filter: blur(24px) saturate(135%);
+}
+.header .header-inner {height: 72px; padding: 0 24px; gap: 36px;}
+.header .brand-mark {border-radius: 12px; background: linear-gradient(145deg, #3b3d45, #24262d); box-shadow: 0 4px 12px #252b3b12;}
+.header .top-nav .nav-share {border-radius: 12px; box-shadow: 0 4px 12px #252b3b0d;}
+.header .user-button {background: #ffffff65; padding: 7px 10px; border-radius: 12px;}
+.site-main>.content-grid {padding-top: 28px;}
+
+.feed {
+  padding: 26px;
+  border: 1px solid rgba(255, 255, 255, .82);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, .36);
+  box-shadow: 0 20px 60px rgba(59, 71, 105, .035), inset 0 1px 0 #ffffffc9;
+}
+.feed .section-title {margin-bottom: 24px; align-items: center;}
+.section-title h2 {font-size: 25px; letter-spacing: -.4px;}
+.feed .overline {font-size: 9px; letter-spacing: 2px; color: #9297a5;}
+.view-tabs {background: rgba(228, 232, 242, .42); border: 1px solid #ffffff8c; border-radius: 13px; padding: 5px;}
+.view-tabs button {border-radius: 9px; padding: 8px 12px;}
+.view-tabs button.selected {background: #ffffffcf; box-shadow: 0 2px 6px rgba(40, 52, 81, .045), inset 0 1px 0 #fff;}
+.btn {border-radius: 12px;}
+.btn.primary,.btn.dark {background: linear-gradient(150deg, #41434c, #2b2d35); box-shadow: 0 5px 14px rgba(40, 43, 56, .08);}
+.btn.primary:hover,.btn.dark:hover {background: linear-gradient(150deg, #363943, #22242c);}
+.btn.secondary {background: rgba(255, 255, 255, .65); border-color: #e4e7f0;}
+.search-input,.sort-select {
+  min-height: 48px;
+  background: rgba(255, 255, 255, .72);
+  border: 1px solid rgba(220, 225, 236, .75);
+  border-radius: 13px;
+  box-shadow: inset 0 1px 0 #fff, 0 3px 10px #414d6603;
+}
+.search-input {padding: 0 16px;}
+.search-input input {background: transparent; font-size: 12px;}
+.search-input:focus-within {border-color: #bec8dc; box-shadow: 0 0 0 3px #c1cde821;}
+.sort-select {padding: 0 14px;}
+.sort-select select {background: transparent;}
+
+.post-card,.empty-state,.explore-map {
+  background: var(--glass);
+  border: 1px solid var(--glass-edge);
+  border-radius: 22px;
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  backdrop-filter: blur(18px) saturate(120%);
+}
+.post-card {padding: 26px; transition: box-shadow .2s, transform .2s, border-color .2s;}
+.post-card:hover {transform: translateY(-2px); border-color: #fff; box-shadow: 0 16px 42px rgba(53, 65, 96, .075), inset 0 1px 0 #fff;}
+.empty-state {background: linear-gradient(150deg, #ffffffb8, #ffffff73); min-height: 350px; padding-top: 42px;}
+.empty-paper {background: linear-gradient(145deg, #f1f4fa, #ffffffba); border-color: #e0e5ef; border-radius: 20px; box-shadow: 0 8px 20px #505e7710; color: #909aaf;}
+.empty-bubble {background: #f6f8fc; border-color: #fff; border-radius: 12px; color: #929caf;}
+.empty-state .empty-kicker {color: #8e95a3;}
+.empty-state h3 {font-size: 18px; font-weight: 500; color: #555d6c;}
+.post-tags>span,.post-tags>button.company-tag {border-radius: 7px; background: #eef1f685;}
+.card-audio {background: #f2f4f980; border: 1px solid #ffffffb0; border-radius: 13px;}
+.company-filter {background: #ffffff85; border-color: #dfe4ef; border-radius: 11px;}
+.company-detail-panel {background: #f4f6fa80; border-color: #e3e7f0; border-radius: 15px;}
+
+.map-toolbar {background: #ffffff60; padding: 19px 22px;}
+.map-perspective {background: #e9edf44f; border: 1px solid #ffffff80; border-radius: 11px; padding: 4px;}
+.map-perspective button {border-radius: 8px;}
+.map-perspective button.selected {background: #ffffffd9; box-shadow: 0 2px 8px #34415e08;}
+.map-explanation,.map-controls {background: #ffffff24;}
+.map-controls button {background: #ffffffa6; border-color: #e2e6ef; border-radius: 8px;}
+.map-viewport {background-color: rgba(246, 248, 252, .57); background-image: radial-gradient(#d9deea 1px, transparent 1px); border-color: #e5e9f266;}
+.map-node {background: #ffffffd9; border: 1px solid #e0e5ef; border-radius: 12px; box-shadow: 0 4px 12px #58658207, inset 0 1px 0 #fff;}
+.map-node:hover {background: #fffffff5; border-color: #b9c3d7;}
+.map-root {background: linear-gradient(145deg, #424652, #2c303b); border-color: #ffffff4d; box-shadow: 0 6px 18px #333b501a; color: #fff;}
+.map-root:hover {background: #313641; border-color: #ffffff4d; color: #fff;}
+.map-root>small {background: #ffffff26; color: #fff;}
+.map-demo-node {border-style: dashed;}
+.map-date {background: #f8faffc9;}
+.map-post {border-radius: 13px;}
+.map-node>small,.map-node>em {background: #eff2f799;}
+.map-root>small {background: #ffffff26;}
+.map-children:before,.map-children>.map-branch:before,.map-children>.map-branch:after {border-color: #cbd3e2;}
+.map-footnote {background: #ffffff26;}
+.demo-detail-badge {background: #f5f7fc9c; border-color: #d2daea; border-radius: 9px;}
+.demo-detail-note {background: #f4f6fb8f; border: 1px solid #e3e8f366; border-radius: 13px;}
+
+.modal-overlay {background: rgba(33, 39, 53, .19); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);}
+.modal {
+  background: rgba(255, 255, 255, .9);
+  border: 1px solid #ffffffed;
+  border-radius: 25px;
+  box-shadow: 0 24px 100px rgba(29, 38, 62, .16), inset 0 1px 0 #fff;
+  -webkit-backdrop-filter: blur(28px) saturate(130%);
+  backdrop-filter: blur(28px) saturate(130%);
+}
+.modal-close {background: #f0f3f88c; border-radius: 10px;}
+.editor-content label input,.editor-content label select,.profile-content input,.comment-form textarea {
+  background: #ffffffa3; border-color: #dfe4ee; border-radius: 10px;
+}
+.company-input,.company-input.chosen {background: #ffffffa3; border-color: #dfe4ee; border-radius: 10px;}
+.company-input input {background: transparent !important;}
+.company-dropdown {background: #ffffffed; border-color: #e4e8f2; border-radius: 13px; box-shadow: 0 12px 30px #39486612;}
+.markdown-editor,.upload-area,.detail-audio,.comment-login {background: #f6f8fc70; border-color: #e4e8f0; border-radius: 14px;}
+.toast {border-radius: 14px; background: #303642e8; border-color: #ffffff30; box-shadow: 0 10px 40px #2c344b1a; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);}
+footer {border-color: rgba(212, 219, 233, .6);}
+
+@media(max-width:760px) {
+  body {background-attachment: scroll;}
+  .header {width: calc(100% - 24px); top: 10px; margin-top: 10px; border-radius: 17px;}
+  .header .header-inner {height: auto; min-height: 0; padding: 12px 15px; gap: 12px;}
+  .header .top-nav {gap: 18px; border-color: #dfe5ef80; padding-top: 10px;}
+  .header .top-nav .nav-share {border-radius: 10px;}
+  .site-main {padding: 0 12px;}
+  .site-main>.content-grid {padding-top: 18px;}
+  .feed {padding: 16px 12px; border-radius: 21px;}
+  .feed .section-title {margin-bottom: 18px; gap: 14px;}
+  .section-title h2 {font-size: 21px;}
+  .view-tabs button {padding: 7px 10px;}
+  .search-input {padding: 0 11px; min-height: 45px;}
+  .search-input input {font-size: 11px;}
+  .sort-select {padding: 0 10px; min-height: 45px;}
+  .post-card {padding: 20px 17px; border-radius: 18px;}
+  .empty-state {padding: 32px 16px; border-radius: 18px;}
+  .empty-state h3 {font-size: 16px;}
+  .explore-map {border-radius: 18px;}
+  .map-toolbar {padding: 15px 14px;}
+  .modal {border-radius: 21px;}
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .header,.post-card,.empty-state,.explore-map,.modal {background: #fbfcfe;}
+}
