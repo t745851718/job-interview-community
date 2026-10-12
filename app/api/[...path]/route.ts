@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { searchCompanies, resolveCompany, communityCompany, linkLegacyCompanies, CompanyError } from '../../../lib/wikidata';
 import { getChatGPTUser } from '../../chatgpt-auth';
+import {resolveInterviewTime} from '../../../lib/interview-time';
 export const dynamic = 'force-dynamic';
 const json = (data: unknown, status = 200) => Response.json(data, {status, headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 class HttpError extends Error { constructor(public status: number, message: string) {super(message);} }
@@ -8,7 +9,7 @@ function db(){if(!env.DB) throw new Error('Database unavailable');return env.DB;
 function bucket(){if(!env.BUCKET) throw new Error('File storage unavailable');return env.BUCKET;}
 function clean(value: unknown, label: string, min: number, max: number){ const t = typeof value === 'string' ? value.trim() : ''; if(t.length < min || t.length > max) throw new HttpError(400, `${label}需要 ${min}–${max} 个字符`); return t; }
 async function account(){const u=await getChatGPTUser(); if(!u) throw new HttpError(401,'请先登录，再参与分享'); const name=u.fullName?.slice(0,24) || '面友'+u.userId.slice(-4); await db().prepare('INSERT INTO users (id,email,name,created_at) VALUES (?,?,?,?) ON CONFLICT(id) DO UPDATE SET email=excluded.email').bind(u.userId,u.email,name,Date.now()).run();return u;}
-const selectPost = `SELECT p.id,p.user_id AS userId,p.title,COALESCE(co.name,p.company) AS company,p.company_id AS companyId,p.company_status AS companyStatus,co.source AS companySource,co.wikidata_id AS wikidataId,co.description AS companyDescription,co.website AS companyWebsite,p.role,p.category,p.outcome,p.excerpt,p.audio_key AS audioKey,p.audio_name AS audioName,p.created_at AS createdAt,u.name AS author,(SELECT COUNT(*) FROM comments c WHERE c.post_id=p.id) AS commentCount FROM posts p JOIN users u ON u.id=p.user_id LEFT JOIN companies co ON co.id=p.company_id`;
+const selectPost = `SELECT p.id,p.user_id AS userId,p.title,COALESCE(co.name,p.company) AS company,p.company_id AS companyId,p.company_status AS companyStatus,co.source AS companySource,co.wikidata_id AS wikidataId,co.description AS companyDescription,co.website AS companyWebsite,p.role,p.category,p.outcome,p.excerpt,p.audio_key AS audioKey,p.audio_name AS audioName,p.created_at AS createdAt,COALESCE(p.interview_at,p.created_at) AS interviewAt,u.name AS author,(SELECT COUNT(*) FROM comments c WHERE c.post_id=p.id) AS commentCount FROM posts p JOIN users u ON u.id=p.user_id LEFT JOIN companies co ON co.id=p.company_id`;
 async function readPost(id:string){const row=await db().prepare(selectPost+' WHERE p.id=?').bind(id).first<any>();if(!row) throw new HttpError(404,'这篇经历不存在或已被删除');return row;}
 function publicPost(p:any){return {...p,companySourceUrl:p.wikidataId?'https://www.wikidata.org/wiki/'+p.wikidataId:null,audioKey:undefined,audioUrl:p.audioKey?'/api/posts/'+p.id+'/audio':null};}
 function checkOrigin(req:Request){const origin=req.headers.get('origin');if(!origin || origin!==new URL(req.url).origin) throw new HttpError(403,'请求来源校验失败');}
@@ -16,6 +17,24 @@ const searchLimits=new Map<string,{n:number;until:number}>();
 async function handle(req:Request){
  const path=new URL(req.url).pathname.split('/').filter(Boolean).slice(1);const method=req.method;
  if(method!=='GET') checkOrigin(req);
+ if(path[0]==='explore' && path.length===1 && method==='GET'){
+   await linkLegacyCompanies(db());
+   const url=new URL(req.url),clauses:string[]=[],args:(string|number)[]=[];
+   const q=(url.searchParams.get('q')||'').trim().slice(0,100),category=url.searchParams.get('category')||'全部';
+   const companyId=url.searchParams.get('companyId');
+   if(companyId){clauses.push('p.company_id=?');args.push(companyId);}
+   if(q){clauses.push("(p.title LIKE ? ESCAPE '\\' OR COALESCE(co.name,p.company) LIKE ? ESCAPE '\\' OR p.role LIKE ? ESCAPE '\\' OR p.excerpt LIKE ? ESCAPE '\\' OR co.aliases LIKE ? ESCAPE '\\' OR u.name LIKE ? ESCAPE '\\')");const term='%'+q.replace(/[\\%_]/g,'\\$&')+'%';args.push(term,term,term,term,term,term);}
+   if(category!=='全部'){clauses.push('p.category=?');args.push(category);}
+   if(url.searchParams.get('audio')==='1')clauses.push('p.audio_key IS NOT NULL');
+   if(url.searchParams.get('mine')==='1'){const u=await account();clauses.push('p.user_id=?');args.push(u.userId);}
+   const from=' FROM posts p JOIN users u ON u.id=p.user_id LEFT JOIN companies co ON co.id=p.company_id';
+   const where=clauses.length?' WHERE '+clauses.join(' AND '):'';
+   const rawOffset=Number(url.searchParams.get('offset')||0),offset=Number.isFinite(rawOffset)?Math.max(0,Math.min(100000,Math.floor(rawOffset))):0;
+   const order=url.searchParams.get('sort')==='discussed'?'(SELECT COUNT(*) FROM comments c WHERE c.post_id=p.id) DESC,p.created_at DESC,p.id DESC':'COALESCE(p.interview_at,p.created_at) DESC,p.id DESC';
+   const rows=await db().prepare('SELECT p.id,p.user_id AS userId,u.name AS author,p.company_id AS companyId,COALESCE(co.name,p.company) AS company,p.created_at AS createdAt,COALESCE(p.interview_at,p.created_at) AS interviewAt,p.title,p.role,(p.audio_key IS NOT NULL) AS hasAudio'+from+where+' ORDER BY '+order+' LIMIT 201 OFFSET ?').bind(...args,offset).all<any>();
+   const count=await db().prepare('SELECT COUNT(*) AS total'+from+where).bind(...args).first<{total:number}>();
+   return json({posts:rows.results.slice(0,200).map(row=>({...row,hasAudio:!!row.hasAudio})),total:count?.total||0,hasMore:rows.results.length>200});
+ }
  if(path[0]==='companies' && path.length===1 && method==='GET'){
    const u=await getChatGPTUser();if(!u)throw new HttpError(401,'请先登录，再搜索和选择公司');
    const now=Date.now();const current=searchLimits.get(u.userId);if(current&&current.until>now&&current.n>=30)throw new HttpError(429,'搜索较频繁，请稍后再试');
@@ -45,6 +64,7 @@ async function handle(req:Request){
     const u=await account();const count=await db().prepare('SELECT COUNT(*) AS n FROM posts WHERE user_id=? AND created_at>?').bind(u.userId,Date.now()-3600000).first<any>();if(count.n>=10) throw new HttpError(429,'发布频率较高，请稍后再试');
     const length=Number(req.headers.get('content-length'));if(length>26*1024*1024) throw new HttpError(413,'文件大小不能超过 25MB');
     let f:FormData;try{f=await req.formData();}catch{throw new HttpError(400,'请使用表单格式上传经历');}const title=clean(f.get('title'),'标题',4,100),submittedCompany=clean(f.get('company'),'公司',1,200),role=clean(f.get('role'),'岗位',1,60),category=clean(f.get('category'),'方向',1,24),outcome=clean(f.get('outcome'),'进展',1,24),md=clean(f.get('markdown'),'正文',10,100000).replace(/\r\n?/g,'\n');
+    const submittedAt=Date.now();let interviewAt:number;try{interviewAt=resolveInterviewTime(f.get('interviewAt'),submittedAt);}catch{throw new HttpError(400,'请选择有效的面试时间（北京时间）');}
     if(!['技术研发','产品设计','运营市场','职能其他'].includes(category)||!['已获 Offer','面试中','未通过','暂不透露'].includes(outcome)) throw new HttpError(400,'请选择有效的方向和面试进展');
     const chosenId=typeof f.get('companyId')==='string'?String(f.get('companyId')):'';const pending=f.get('companyPending')==='1';
     if(chosenId&&pending)throw new HttpError(400,'公司不能同时标记为已关联和待核实');
@@ -59,7 +79,7 @@ async function handle(req:Request){
       await bucket().put(mdKey,md,{httpMetadata:{contentType:'text/markdown; charset=utf-8'}});
       if(file) await bucket().put(audioKey!,file.stream(),{httpMetadata:{contentType:file.type}});
       const excerpt=md.replace(/```[\s\S]*?```/g,' [代码片段] ').replace(/[#*>`_\[\]]/g,'').replace(/\s+/g,' ').slice(0,180);
-      await db().prepare('INSERT INTO posts (id,user_id,title,company,company_id,company_status,role,category,outcome,excerpt,markdown_key,audio_key,audio_type,audio_name,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(id,u.userId,title,company,companyId,companyStatus,role,category,outcome,excerpt,mdKey,audioKey,file?.type||null,file?.name.slice(0,150)||null,Date.now()).run();
+      await db().prepare('INSERT INTO posts (id,user_id,title,company,company_id,company_status,role,category,outcome,excerpt,markdown_key,audio_key,audio_type,audio_name,created_at,interview_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(id,u.userId,title,company,companyId,companyStatus,role,category,outcome,excerpt,mdKey,audioKey,file?.type||null,file?.name.slice(0,150)||null,submittedAt,interviewAt).run();
     }catch(error){await bucket().delete([mdKey,...(audioKey?[audioKey]:[])]);throw error;}
     return json({id},201);
    }

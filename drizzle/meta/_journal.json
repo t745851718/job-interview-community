@@ -15,6 +15,13 @@
       "when": 1791800174277,
       "tag": "0001_absurd_iron_patriot",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791802761603,
+      "tag": "0002_cheerful_hercules",
+      "breakpoints": true
     }
   ]
 }

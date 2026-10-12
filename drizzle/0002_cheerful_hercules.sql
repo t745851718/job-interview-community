@@ -1,0 +1,1 @@
+ALTER TABLE `posts` ADD `interview_at` integer;

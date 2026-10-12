@@ -16,7 +16,7 @@ export const posts = sqliteTable('posts', {
   title: text('title').notNull(), company: text('company').notNull(), companyId: text('company_id').references(() => companies.id), companyStatus: text('company_status').notNull().default('unlinked'), role: text('role').notNull(),
   category: text('category').notNull(), outcome: text('outcome').notNull(), excerpt: text('excerpt').notNull(),
   markdownKey: text('markdown_key').notNull(), audioKey: text('audio_key'), audioType: text('audio_type'), audioName: text('audio_name'),
-  createdAt: integer('created_at').notNull(),
+  createdAt: integer('created_at').notNull(), interviewAt: integer('interview_at'),
 }, t => [index('posts_created_idx').on(t.createdAt), index('posts_user_idx').on(t.userId), index('posts_company_idx').on(t.companyId)]);
 export const comments = sqliteTable('comments', {
   id: text('id').primaryKey(), postId: text('post_id').notNull().references(() => posts.id, {onDelete:'cascade'}),
