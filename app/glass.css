@@ -124,6 +124,8 @@ body {
 .markdown-editor,.upload-area,.detail-audio,.comment-login {background: #f6f8fc70; border-color: #e4e8f0; border-radius: 14px;}
 .toast {border-radius: 14px; background: #303642e8; border-color: #ffffff30; box-shadow: 0 10px 40px #2c344b1a; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);}
 footer {border-color: rgba(212, 219, 233, .6);}
+.publish-help {font-size:11px;line-height:1.8;color:#71717a;margin:12px 0 0;text-align:right;}
+.publish-row button[aria-busy="true"] {cursor:progress;}
 
 @media(max-width:760px) {
   body {background-attachment: scroll;}
